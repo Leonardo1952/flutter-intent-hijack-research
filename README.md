@@ -1,5 +1,7 @@
 # Android Intent Hijacking in Flutter (NowBank)
 
+<!-- TODO: add the article thumbnail here, e.g. ![thumb](./thumb.png) -->
+
 Support project for an article about an Android Intent-hardening change in
 Flutter: in **release builds**, `FlutterActivity` and `FlutterFragmentActivity`
 stop blindly trusting `Intent` extras sent by external apps, and engine flags
@@ -107,32 +109,6 @@ flutter-intent-hijack-research/
 | 9 | extra `cached_engine_id=session_engine` | WidgetHostActivity | Session reuse via `FlutterActivity`'s **default** behavior (no fixed id in code) |
 | 10 | deep link `VIEW banconow://connect/statement` + extra `dart_entrypoint=supportMain` | MainActivity (via intent-filter) | Entrypoint hijacked even going through the deep link's "trusted" Activity |
 
-> The flag extra names in scenario 6 (`trace-startup`, `dart-flags`) follow the
-> format historically used by the embedder; the official docs **don't** state
-> the exact keys. Confirmed live on 3.47.9: both are accepted with no crash
-> and no warning (see the evidence table below).
-> Scenario 7's extra (`dart_entrypoint_args`) must be sent as `--esal` (an
-> `ArrayList<String>`), not `--es`/`--esa` — both of those raise a
-> `ClassCastException` inside the activity. See the evidence table below.
-> Scenario 4 (`SessionWidgetActivity`) hijacks the session just by being
-> exported: it fixes `getCachedEngineId()` in code, so the probe's extra is
-> redundant there. Scenario 9 (`WidgetHostActivity`) exists to close that gap:
-> it's the same cached engine, but handled by `FlutterActivity`'s default
-> behavior, which reads `cached_engine_id` straight from the Intent — proving
-> the extra's real effect, not just the exported Activity's.
-> Scenario 8's `session_group` group doesn't actually exist — no engine was
-> registered under that group — so this scenario crashes (`FlutterEngineGroup`
-> not found) instead of a full hijack; it still proves the extra is read.
-> Scenario 10 is the most serious of the ten: **confirmed live** on 3.47.9
-> (see the evidence table below). The deep link check only verifies that
-> `data` matches the `<intent-filter>`; extras that ride along, like
-> `dart_entrypoint`, aren't covered by that check — it's a separate
-> verification, over the entrypoint/route/engine extras. Whether the
-> hardened release also blocks this case isn't verified live in this lab;
-> based on the official pages it should, since the extras check applies to
-> any Activity, not just exported ones without an intent-filter,
-> independently of whether an intent-filter was satisfied.
-
 ## Confirmation against the official pages
 
 Pages read (part of the text came from a summary, since reading truncated
@@ -175,8 +151,7 @@ widget, `exported="false"`): the partner would start entering only through
   - **Android 14+ (API 34+)** covers the verification branch that checks the
     UID of whoever launched the Activity (`getLaunchedFromUid()`).
   - **Android 13 or earlier (API ≤ 33)** covers the other branch, which checks
-    `getCallingPackage()`. Not yet tested in this repository — one of the
-    pending items below.
+    `getCallingPackage()`. Not yet tested in this repository.
 
 Optional: a separate "attacker" app (a different `applicationId`), for a demo
 closer to reality than `adb shell`. Through `adb shell`, the sender is already
@@ -234,7 +209,3 @@ used in the article into a `docs/` folder).
       `docs/fase1-3.47.9/05b-activity-not-exported-logcat.png`, a rendered
       capture of the actual `SecurityException: ... not exported from uid`
       confirmed live on the emulator
-- [ ] Android 13- coverage (`getCallingPackage()`), a separate "attacker" app,
-      `FLAG_SECURE` on sensitive screens, session persistence across logout
-      and cached-engine reuse
-- [ ] Write the article
