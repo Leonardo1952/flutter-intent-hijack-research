@@ -1,0 +1,11 @@
+# OS / editor cruft (o app/ e o app/android/ já têm seus próprios .gitignore
+# com as regras específicas do Flutter e do Gradle)
+.DS_Store
+*.swp
+*~
+
+# Evidências/captures (material do artigo, não do repositório)
+docs/
+
+# Ferramenta local de captura, não publicada
+scripts/render_terminal_capture.py
