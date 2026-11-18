@@ -1,9 +1,9 @@
-# Flutter 3.50 — Android Intent Hardening (NowBank)
+# Android Intent Hijacking in Flutter (NowBank)
 
-Support project for an article about Flutter 3.50's Android security change:
-in **release builds**, `FlutterActivity` and `FlutterFragmentActivity` stop blindly
-trusting `Intent` extras sent by external apps, and engine flags passed at
-runtime are ignored (or rejected, in the CLI's case).
+Support project for an article about an Android Intent-hardening change in
+Flutter: in **release builds**, `FlutterActivity` and `FlutterFragmentActivity`
+stop blindly trusting `Intent` extras sent by external apps, and engine flags
+passed at runtime are ignored (or rejected, in the CLI's case).
 
 The target is **NowBank**, a fictional banking app that looks like a real one:
 balance, statement, product offer, transfer. The vulnerable surface isn't a
@@ -11,8 +11,8 @@ screen labeled "Admin" — it comes from a plausible feature: an **embeddable
 widget** that partner apps (Open Finance aggregators, digital wallets) embed
 via add-to-app to show the NowBank statement inside their own app, after the
 OAuth handoff. That widget is an exported Android `Activity`, and it was
-forgotten without an `intent-filter` — the real configuration mistake that 3.50
-mitigates. It follows the same pattern as
+forgotten without an `intent-filter` — the real configuration mistake that
+this hardening mitigates. It follows the same pattern as
 [`flutter-tls-mitm-research`](https://github.com/Leonardo1952/flutter-tls-mitm-research):
 the target app behaves like an ordinary app, and the attack only ever arrives
 from the outside, never through code the app imports on purpose.
@@ -46,10 +46,10 @@ app can hijack route, entrypoint, and cached engine via `Intent` extras.
 | release | 3.47.9 | External extras work: route/entrypoint/engine hijacked |
 
 This lab only exercises 3.47.9, the pre-hardening behavior; it does not run
-3.50 live. The ["Confirmation against the official pages"](#confirmation-against-the-official-pages)
-section below summarizes, from Flutter's own docs, what 3.50 changes —
-treat that part as documentation review, not as something confirmed in this
-repository.
+the hardened version live. The ["Confirmation against the official pages"](#confirmation-against-the-official-pages)
+section below summarizes, from Flutter's own docs, what that hardening
+changes — treat that part as documentation review, not as something
+confirmed in this repository.
 
 The project is **pinned to 3.47.9** via FVM (`app/.fvmrc`). The global SDK is
 also 3.47.9.
@@ -57,7 +57,7 @@ also 3.47.9.
 ## Structure
 
 ```
-flutter-350-intent-security/
+flutter-intent-hijack-research/
 ├── README.md                  # this file
 ├── scripts/
 │   ├── build_and_install.sh   # build + install (debug|profile|release)
@@ -100,7 +100,7 @@ flutter-350-intent-security/
 | 2 | extra `route=/transfer` | PartnerWidgetActivity | Navigation to an internal route |
 | 3 | extra `dart_entrypoint=supportMain` | PartnerWidgetActivity | Arbitrary entrypoint execution, without login |
 | 4 | extra `cached_engine_id=session_engine` | SessionWidgetActivity | Reuse of a pre-authenticated banking session |
-| 5 | extra `route=/transfer` | PartnerWidgetActivitySecure | Blocked by Android (`exported="false"`) on any version |
+| 5 | extra `route=/transfer` | PartnerWidgetActivitySecure | Blocked by Android (`exported="false"`), independent of this hardening |
 | 6 | extras `trace-startup`, `dart-flags` | PartnerWidgetActivity | Engine flags injected at runtime |
 | 7 | extra `dart_entrypoint_args` | PartnerWidgetActivity | Arbitrary arguments for the entrypoint |
 | 8 | extra `cached_engine_group_id` | PartnerWidgetActivity | Engine from a cached group |
@@ -127,11 +127,11 @@ flutter-350-intent-security/
 > (see the evidence table below). The deep link check only verifies that
 > `data` matches the `<intent-filter>`; extras that ride along, like
 > `dart_entrypoint`, aren't covered by that check — it's a separate
-> verification, over the entrypoint/route/engine extras. Whether Flutter
-> 3.50 release also blocks this case isn't verified live in this lab; based
-> on the official pages it should, since the extras check applies to any
-> Activity, not just exported ones without an intent-filter, independently
-> of whether an intent-filter was satisfied.
+> verification, over the entrypoint/route/engine extras. Whether the
+> hardened release also blocks this case isn't verified live in this lab;
+> based on the official pages it should, since the extras check applies to
+> any Activity, not just exported ones without an intent-filter,
+> independently of whether an intent-filter was satisfied.
 
 ## Confirmation against the official pages
 
@@ -151,8 +151,8 @@ Pages read (part of the text came from a summary, since reading truncated
   `flutter run --release --use-application-binary` plus flags.
 - **Deep links:** need to match an `<intent-filter>`; keep working.
 - **Engine created with `FlutterEngine(context, args)`:** programmatic flags still apply.
-- **Not captured in this lab:** the exact log warning text on 3.50 release —
-  this repository only runs 3.47.9 live.
+- **Not captured in this lab:** the exact log warning text on the hardened
+  release — this repository only runs 3.47.9 live.
 
 Migration (also from the official pages): `android:exported="false"` where
 possible, deep links instead of `route`, `<meta-data io.flutter.InitialRoute /

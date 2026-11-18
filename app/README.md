@@ -1,7 +1,7 @@
 # NowBank
 
-Fictional banking app used as the target in the Flutter 3.50 Android Intent
-hardening lab described in the [root README](../README.md).
+Fictional banking app used as the target in the Android Intent hardening
+lab described in the [root README](../README.md).
 
 ## Running
 
