@@ -1,6 +1,7 @@
 # Android Intent Hijacking in Flutter (NowBank)
 
-<!-- TODO: add the article thumbnail here, e.g. ![thumb](./thumb.png) -->
+<img width="640" height="338" alt="image" src="https://github.com/user-attachments/assets/eb3d742b-1cb9-4c59-8685-98c259e45ec6" />
+
 
 Support project for an article about an Android Intent-hardening change in
 Flutter: in **release builds**, `FlutterActivity` and `FlutterFragmentActivity`
